@@ -4,6 +4,12 @@
 # Dependencies
 node_modules/
 
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
 # Build output
 dist/
 build/
