@@ -1,7 +1,13 @@
 import { useId, useState, type FormEvent } from 'react'
 import { MAX_SYMBOL_LENGTH, normalizeSymbol } from '../lib/symbol'
 
-const QUICK_PICKS = ['TSLA', 'AAPL', 'MSFT', 'NVDA', '^GSPC']
+const QUICK_PICKS = [
+  { symbol: 'TSLA', description: 'Tesla, Nasdaq' },
+  { symbol: 'AAPL', description: 'Apple, Nasdaq' },
+  { symbol: 'MSFT', description: 'Microsoft, Nasdaq' },
+  { symbol: '7203.T', description: 'Toyota, Tokyo Stock Exchange' },
+  { symbol: '^GSPC', description: 'S&P 500 index' },
+]
 
 interface SymbolSearchProps {
   initialValue?: string
@@ -73,8 +79,14 @@ export function SymbolSearch({
       </form>
       <div className="quick-picks">
         <span className="quick-picks-label">Try</span>
-        {QUICK_PICKS.map((symbol) => (
-          <button key={symbol} type="button" className="chip" onClick={() => pick(symbol)}>
+        {QUICK_PICKS.map(({ symbol, description }) => (
+          <button
+            key={symbol}
+            type="button"
+            className="chip"
+            title={description}
+            onClick={() => pick(symbol)}
+          >
             {symbol}
           </button>
         ))}

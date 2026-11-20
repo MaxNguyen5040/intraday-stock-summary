@@ -38,6 +38,15 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'MSFT' })).toBeInTheDocument()
   })
 
+  it('looks up a non-US quick pick', async () => {
+    const { user } = renderWithProviders(<App />)
+
+    await user.click(screen.getByRole('button', { name: '7203.T' }))
+
+    expect(await screen.findByRole('heading', { name: '7203.T' })).toBeInTheDocument()
+    expect(window.location.search).toBe('?symbol=7203.T')
+  })
+
   it('validates input before calling the API', async () => {
     let calls = 0
     server.use(
