@@ -1,5 +1,7 @@
 # Intraday Stock Summary
 
+[![CI](https://github.com/MaxNguyen5040/intraday-stock-summary/actions/workflows/ci.yml/badge.svg)](https://github.com/MaxNguyen5040/intraday-stock-summary/actions/workflows/ci.yml)
+
 Enter a stock symbol and see the last month of 15-minute intraday data rolled up by trading day: average low, average high, and total volume.
 
 - `server/` ASP.NET Core Web API (.NET 10) that queries Yahoo Finance and aggregates by day
@@ -40,6 +42,8 @@ cd server && dotnet test
 # Client: component and API-client tests (Vitest, Testing Library, MSW), plus static checks
 cd client && npm test && npm run lint && npm run typecheck && npm run format:check && npm run build
 ```
+
+[CI](.github/workflows/ci.yml) runs the same checks on every push and pull request, plus `dotnet format --verify-no-changes`. Dependabot opens weekly grouped updates for NuGet, npm and GitHub Actions.
 
 ## API
 
