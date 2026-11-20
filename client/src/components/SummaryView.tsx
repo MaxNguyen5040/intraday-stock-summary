@@ -45,6 +45,7 @@ export function SummaryView({ symbol }: { symbol: string }) {
           <span aria-hidden="true"> · </span>
           {stats.tradingDays} trading days
         </p>
+        <p className="results-note">The latest day may be incomplete while its market is open.</p>
       </header>
       <SummaryStats stats={stats} />
       <Suspense fallback={<div className="skeleton skeleton-chart" aria-hidden="true" />}>

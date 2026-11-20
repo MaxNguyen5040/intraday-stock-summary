@@ -16,6 +16,7 @@ describe('App', () => {
     expect(screen.getByText(/Tue, Nov 17, 2026 to Thu, Nov 19, 2026/)).toBeInTheDocument()
     expect(await screen.findByRole('img', { name: /chart/i })).toBeInTheDocument()
     expect(screen.getByRole('cell', { name: '100.1234' })).toBeInTheDocument()
+    expect(screen.getByText(/may be incomplete/i)).toBeInTheDocument()
     expect(window.location.search).toBe('?symbol=TSLA')
   })
 
@@ -30,6 +31,7 @@ describe('App', () => {
 
   it('looks up a quick pick', async () => {
     const { user } = renderWithProviders(<App />)
+    expect(screen.queryByText(/may be incomplete/i)).not.toBeInTheDocument()
 
     await user.click(screen.getByRole('button', { name: 'MSFT' }))
 
@@ -63,6 +65,7 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'No data for ZZZZ' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /try again/i })).not.toBeInTheDocument()
+    expect(screen.queryByText(/may be incomplete/i)).not.toBeInTheDocument()
   })
 
   it('recovers from an upstream failure when the user retries', async () => {
@@ -93,6 +96,7 @@ describe('App', () => {
     await user.click(screen.getByRole('button', { name: 'TSLA' }))
 
     expect(await screen.findByRole('heading', { name: /no trades for tsla/i })).toBeInTheDocument()
+    expect(screen.queryByText(/may be incomplete/i)).not.toBeInTheDocument()
   })
 
   it('hides volume figures for instruments without volume', async () => {

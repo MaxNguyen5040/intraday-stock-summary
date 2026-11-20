@@ -359,6 +359,12 @@ input {
   color: var(--text-muted);
 }
 
+.results-note {
+  flex-basis: 100%;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
 .stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(11rem, 100%), 1fr));
