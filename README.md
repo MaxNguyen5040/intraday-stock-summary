@@ -8,7 +8,7 @@ Enter a stock symbol and see the last month of 15-minute intraday data rolled up
 ## Prerequisites
 
 - .NET SDK 10.0.100 or later (`dotnet --version`)
-- Node.js 20.19+ or 22.12+ with npm
+- Node.js 24 LTS (22.22+ also works) with npm. `client/.nvmrc` pins the major version for `nvm use`.
 
 ## Running locally
 
@@ -19,21 +19,26 @@ cd server
 dotnet run --project src/StockSummary.Api
 ```
 
-In a second terminal, start the client (http://localhost:5173):
+In a second terminal, start the client and open http://localhost:5173:
 
 ```sh
 cd client
-npm install
+npm ci
 npm run dev
 ```
 
-The Vite dev server proxies `/api` to the API, so no CORS setup is needed in development. Set `API_PROXY_TARGET` to point it elsewhere.
+The Vite dev server proxies `/api` to the API, so no CORS setup is needed in development. Set `API_PROXY_TARGET` to point the proxy elsewhere, or `VITE_API_BASE_URL` at build time if the built client is served from a different origin than the API.
+
+Try `TSLA`, `BRK-B`, `^GSPC`, or an invalid symbol like `NOTAREALSYM123`. The selected symbol is kept in the URL (`?symbol=TSLA`), so results can be bookmarked and the back button moves between lookups.
 
 ## Tests and checks
 
 ```sh
+# API: unit, recorded-fixture and in-process HTTP tests
 cd server && dotnet test
-cd client && npm run lint && npm run typecheck && npm run build
+
+# Client: component and API-client tests (Vitest, Testing Library, MSW), plus static checks
+cd client && npm test && npm run lint && npm run typecheck && npm run format:check && npm run build
 ```
 
 ## API
