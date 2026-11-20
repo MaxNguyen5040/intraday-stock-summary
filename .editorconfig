@@ -25,5 +25,9 @@ dotnet_naming_symbols.private_fields.applicable_accessibilities = private
 dotnet_naming_style.underscore_camel.required_prefix = _
 dotnet_naming_style.underscore_camel.capitalization = camel_case
 
+# Test names read as sentences: Method_does_thing_when_condition
+[server/tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none
+
 [*.md]
 trim_trailing_whitespace = false

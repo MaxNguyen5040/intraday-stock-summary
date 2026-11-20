@@ -1,6 +1,22 @@
 @host = http://localhost:5080
 
-GET {{host}}/openapi/v1.json
+GET {{host}}/api/v1/stocks/TSLA/daily-summary
 Accept: application/json
 
 ###
+
+# Unknown symbol -> 404 problem+json
+GET {{host}}/api/v1/stocks/NOTAREALSYM123/daily-summary
+
+###
+
+# Invalid symbol -> 400 problem+json
+GET {{host}}/api/v1/stocks/BAD%20SYM/daily-summary
+
+###
+
+GET {{host}}/healthz
+
+###
+
+GET {{host}}/openapi/v1.json
