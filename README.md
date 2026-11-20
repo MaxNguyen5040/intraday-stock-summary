@@ -7,6 +7,8 @@ Enter a stock symbol and see the last month of 15-minute intraday data rolled up
 - `server/` ASP.NET Core Web API (.NET 10) that queries Yahoo Finance and aggregates by day
 - `client/` React + TypeScript single-page app (Vite)
 
+![TSLA daily summary: search with quick picks, period stats, low/high average band chart with volume, and the daily table](docs/screenshot-tsla.png)
+
 ## Prerequisites
 
 - .NET SDK 10.0.100 or later (`dotnet --version`)
@@ -14,20 +16,29 @@ Enter a stock symbol and see the last month of 15-minute intraday data rolled up
 
 ## Running locally
 
-Start the API (listens on http://localhost:5080):
+1. Clone the repo:
 
-```sh
-cd server
-dotnet run --project src/StockSummary.Api
-```
+   ```sh
+   git clone https://github.com/MaxNguyen5040/intraday-stock-summary.git
+   cd intraday-stock-summary
+   ```
 
-In a second terminal, start the client and open http://localhost:5173:
+2. In one terminal, from the repo root, start the API. It listens on http://localhost:5080.
 
-```sh
-cd client
-npm ci
-npm run dev
-```
+   ```sh
+   cd server
+   dotnet run --project src/StockSummary.Api
+   ```
+
+3. In a second terminal, from the repo root, start the client:
+
+   ```sh
+   cd client
+   npm ci
+   npm run dev
+   ```
+
+4. Open http://localhost:5173.
 
 The Vite dev server proxies `/api` to the API, so no CORS setup is needed in development. Set `API_PROXY_TARGET` to point the proxy elsewhere, or `VITE_API_BASE_URL` at build time if the built client is served from a different origin than the API.
 
@@ -35,12 +46,14 @@ Try `TSLA`, `BRK-B`, `^GSPC`, or an invalid symbol like `NOTAREALSYM123`. The se
 
 ## Tests and checks
 
+From the repo root:
+
 ```sh
 # API: unit, recorded-fixture and in-process HTTP tests
-cd server && dotnet test
+(cd server && dotnet test)
 
 # Client: component and API-client tests (Vitest, Testing Library, MSW), plus static checks
-cd client && npm test && npm run lint && npm run typecheck && npm run format:check && npm run build
+(cd client && npm test && npm run lint && npm run typecheck && npm run format:check && npm run build)
 ```
 
 [CI](.github/workflows/ci.yml) runs the same checks on every push and pull request, plus `dotnet format --verify-no-changes`. Dependabot opens weekly grouped updates for NuGet, npm and GitHub Actions.
@@ -141,9 +154,29 @@ client/src/
 
 ## Testing
 
-- **Server (49 tests, xUnit):** symbol validation; aggregation including the time zone, DST and rounding cases; the Yahoo provider against recorded responses and every failure mode (404, 429, 5xx, malformed JSON, timeouts, caller cancellation); caching; and in-process HTTP tests through `WebApplicationFactory` that assert the exact JSON shape, status codes and problem-details content type.
-- **Client (42 tests, Vitest + Testing Library + MSW):** the API client's error mapping, formatting and stats helpers, table sorting, and full user flows through `<App />` (search, quick picks, URL state, back navigation, validation, each error state, retry, empty and no-volume results). MSW is set to fail on any unhandled request.
+- **Server (52 tests, xUnit):** symbol validation; aggregation including the time zone, DST and rounding cases; the Yahoo provider against recorded responses and every failure mode (404, 429, 5xx, malformed JSON, timeouts, caller cancellation); caching; and in-process HTTP tests through `WebApplicationFactory` that assert the exact JSON shape, status codes, problem-details content type and `Cache-Control` behavior.
+- **Client (47 tests, Vitest + Testing Library + MSW):** the API client's error mapping, formatting and stats helpers, table sorting, the `/` keyboard shortcut, and full user flows through `<App />` (search, quick picks, URL state, back navigation, validation, each error state, retry, empty and no-volume results). MSW is set to fail on any unhandled request.
 - **Manual:** run against live Yahoo with TSLA, AAPL, MSFT, SPY, BRK-B, ^GSPC, 7203.T, EURUSD=X, BTC-USD, an unknown symbol, invalid input, the API stopped, and the rate limit exceeded; checked in light and dark mode and at narrow widths.
+
+### Manual test checklist
+
+With both apps running (see [Running locally](#running-locally)), open http://localhost:5173:
+
+| Try | Expect |
+|---|---|
+| Type `tsla`, press Enter | Summary cards, chart, table, and the partial-day note. URL becomes `?symbol=TSLA` |
+| Hover the chart | Tooltip with date, high avg, low avg, volume |
+| Click table headers | Rows re-sort; the arrow shows direction |
+| Hover, then click the `7203.T` chip | Description tooltip, then Toyota results |
+| Press `/` from anywhere on the page | Search box gets focus with its text selected |
+| `EURUSD=X` | Four-decimal prices; no volume cards, bars or axis |
+| `NOTAREALSYM123` | "No data for..." message, no retry button |
+| `bad sym!` | Inline validation error; no request is sent |
+| Look up two symbols, then press Back | Returns to the first symbol |
+| Stop the API, then look up a symbol | "Cannot reach the server" with Try again; restart the API and retry to recover |
+| Narrow the window, switch the OS to dark mode | Layout stacks; dark theme applies |
+| `curl -i localhost:5080/api/v1/stocks/TSLA/daily-summary` | `200`, JSON array, `Cache-Control: public, max-age=60` |
+| Repeat that curl 31+ times within a minute | `429` problem response with `Retry-After` |
 
 ## Limitations and future work
 
