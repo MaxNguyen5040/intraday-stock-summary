@@ -198,6 +198,17 @@ input {
   font-size: 0.875rem;
 }
 
+.search-shortcut {
+  margin-left: 0.5rem;
+  padding: 0 0.375rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 .search-row {
   display: flex;
   gap: 0.5rem;
@@ -562,6 +573,10 @@ input {
 @media (max-width: 560px) {
   .app {
     padding-top: 1.5rem;
+  }
+
+  .search-shortcut {
+    display: none;
   }
 
   .search-input {

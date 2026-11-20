@@ -1,4 +1,4 @@
-import { useId, useState, type FormEvent } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { MAX_SYMBOL_LENGTH, normalizeSymbol } from '../lib/symbol'
 
 const QUICK_PICKS = [
@@ -8,6 +8,16 @@ const QUICK_PICKS = [
   { symbol: '7203.T', description: 'Toyota, Tokyo Stock Exchange' },
   { symbol: '^GSPC', description: 'S&P 500 index' },
 ]
+
+function isEditable(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) return false
+  return (
+    target.isContentEditable ||
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement
+  )
+}
 
 interface SymbolSearchProps {
   initialValue?: string
@@ -24,6 +34,19 @@ export function SymbolSearch({
   const [error, setError] = useState<string | null>(null)
   const inputId = useId()
   const errorId = useId()
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey) return
+      if (event.defaultPrevented || isEditable(event.target)) return
+      event.preventDefault()
+      inputRef.current?.focus()
+      inputRef.current?.select()
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -52,9 +75,13 @@ export function SymbolSearch({
       <form className="search-form" onSubmit={handleSubmit} noValidate>
         <label htmlFor={inputId} className="search-label">
           Ticker symbol
+          <kbd className="search-shortcut" aria-hidden="true" title="Press / to focus">
+            /
+          </kbd>
         </label>
         <div className="search-row">
           <input
+            ref={inputRef}
             id={inputId}
             className="search-input"
             value={value}
@@ -66,6 +93,7 @@ export function SymbolSearch({
             maxLength={MAX_SYMBOL_LENGTH + 4}
             aria-invalid={error ? true : undefined}
             aria-describedby={error ? errorId : undefined}
+            aria-keyshortcuts="/"
           />
           <button type="submit" className="button button-primary" disabled={isLoading}>
             {isLoading ? 'Loading' : 'Look up'}
