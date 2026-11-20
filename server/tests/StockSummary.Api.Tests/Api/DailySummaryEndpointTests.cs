@@ -113,6 +113,47 @@ public sealed class DailySummaryEndpointTests : IDisposable
     }
 
     [Fact]
+    public async Task Success_is_publicly_cacheable_for_the_configured_cache_duration()
+    {
+        var provider = new FakeMarketDataProvider();
+        provider.Returns(Bar("2026-11-17T14:30:00Z", 40m, 41m, 100));
+        using var factory = CreateFactory(provider, permitLimit: 1000, cacheSeconds: 60);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri("/api/v1/stocks/TSLA/daily-summary", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.Public);
+        Assert.Equal(TimeSpan.FromSeconds(60), response.Headers.CacheControl?.MaxAge);
+    }
+
+    [Fact]
+    public async Task Success_is_not_stored_when_caching_is_disabled()
+    {
+        _provider.Returns(Bar("2026-11-17T14:30:00Z", 40m, 41m, 100));
+
+        using var client = _factory.CreateClient();
+        var response = await client.GetAsync(new Uri("/api/v1/stocks/TSLA/daily-summary", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+    }
+
+    [Fact]
+    public async Task Errors_are_not_given_a_max_age()
+    {
+        var provider = new FakeMarketDataProvider();
+        provider.Throws(new SymbolNotFoundException(Symbol("NOPE")));
+        using var factory = CreateFactory(provider, permitLimit: 1000, cacheSeconds: 60);
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri("/api/v1/stocks/NOPE/daily-summary", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Null(response.Headers.CacheControl?.MaxAge);
+    }
+
+    [Fact]
     public async Task Health_endpoint_reports_healthy()
     {
         using var client = _factory.CreateClient();
@@ -137,10 +178,13 @@ public sealed class DailySummaryEndpointTests : IDisposable
         return problem;
     }
 
-    private static WebApplicationFactory<Program> CreateFactory(IMarketDataProvider provider, int permitLimit) =>
+    private static WebApplicationFactory<Program> CreateFactory(
+        IMarketDataProvider provider,
+        int permitLimit,
+        int cacheSeconds = 0) =>
         new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
         {
-            builder.UseSetting("StockSummary:CacheSeconds", "0");
+            builder.UseSetting("StockSummary:CacheSeconds", cacheSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture));
             builder.UseSetting("RateLimiting:PermitLimit", permitLimit.ToString(System.Globalization.CultureInfo.InvariantCulture));
             builder.ConfigureTestServices(services =>
             {

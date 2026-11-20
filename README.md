@@ -61,7 +61,7 @@ Symbols are case-insensitive and may include `.`, `-`, `=` and a leading `^` (fo
 
 | Status | When |
 |---|---|
-| 200 | Success. An empty array means the symbol exists but had no trades in the window. |
+| 200 | Success. An empty array means the symbol exists but had no trades in the window. Sent with `Cache-Control: public, max-age=<CacheSeconds>` (or `no-store` when `CacheSeconds` is 0). |
 | 400 | The symbol fails validation. |
 | 404 | Yahoo has no data for the symbol. |
 | 429 | This client exceeded the API's rate limit (30 requests/minute by default). |

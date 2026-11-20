@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
+using Microsoft.Net.Http.Headers;
 using StockSummary.Api.Domain;
 using StockSummary.Api.Infrastructure;
 
@@ -8,7 +10,9 @@ namespace StockSummary.Api.Stocks;
 [ApiController]
 [Route("api/v1/stocks")]
 [EnableRateLimiting(RateLimitingSetup.ApiPolicy)]
-public sealed class StocksController(IStockSummaryService stockSummaryService) : ControllerBase
+public sealed class StocksController(
+    IStockSummaryService stockSummaryService,
+    IOptions<StockSummaryOptions> options) : ControllerBase
 {
     /// <summary>Last month of intraday data for a symbol, grouped by trading day.</summary>
     [HttpGet("{symbol}/daily-summary")]
@@ -31,6 +35,16 @@ public sealed class StocksController(IStockSummaryService stockSummaryService) :
         }
 
         var summaries = await stockSummaryService.GetDailySummariesAsync(stockSymbol, cancellationToken);
+        SetCacheControl();
         return Ok(summaries.Select(DailySummaryResponse.From).ToList());
+    }
+
+    // Only reached on success, so error responses never get a max-age.
+    private void SetCacheControl()
+    {
+        var cacheSeconds = options.Value.CacheSeconds;
+        Response.GetTypedHeaders().CacheControl = cacheSeconds > 0
+            ? new CacheControlHeaderValue { Public = true, MaxAge = TimeSpan.FromSeconds(cacheSeconds) }
+            : new CacheControlHeaderValue { NoStore = true };
     }
 }
