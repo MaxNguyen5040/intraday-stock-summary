@@ -9,6 +9,8 @@ export interface PeriodStats {
   lastMidpoint: number
   /** Change in daily midpoint from the first day to the last, as a ratio (0.05 = +5%). */
   midpointChange: number
+  /** False for instruments Yahoo reports no volume for, such as FX pairs. */
+  hasVolume: boolean
   averageVolume: number
   busiestDay: DailySummary
 }
@@ -34,6 +36,7 @@ export function computePeriodStats(days: readonly DailySummary[]): PeriodStats |
     periodHigh: Math.max(...days.map((d) => d.highAverage)),
     lastMidpoint,
     midpointChange: firstMidpoint === 0 ? 0 : (lastMidpoint - firstMidpoint) / firstMidpoint,
+    hasVolume: days.some((d) => d.volume > 0),
     averageVolume: days.reduce((sum, d) => sum + d.volume, 0) / days.length,
     busiestDay: days.reduce((busiest, d) => (d.volume > busiest.volume ? d : busiest)),
   }

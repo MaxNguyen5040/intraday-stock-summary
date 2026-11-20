@@ -51,6 +51,11 @@ export async function fetchDailySummary(
 
   if (!response.ok) {
     const problem = await readProblem(response)
+    // The API always answers with problem+json. A bare 502/503/504 came from a proxy or load
+    // balancer in front of it, meaning our server is down, not the market data provider.
+    if (!problem && GATEWAY_STATUSES.has(response.status)) {
+      throw new ApiError('network', 'Could not reach the server.', response.status)
+    }
     throw new ApiError(
       kindForStatus(response.status),
       problem?.detail ?? problem?.title ?? response.statusText,
@@ -64,6 +69,8 @@ export async function fetchDailySummary(
   }
   return body
 }
+
+const GATEWAY_STATUSES = new Set([502, 503, 504])
 
 function kindForStatus(status: number): ApiErrorKind {
   switch (status) {
@@ -83,6 +90,9 @@ function kindForStatus(status: number): ApiErrorKind {
 }
 
 async function readProblem(response: Response): Promise<ProblemDetails | undefined> {
+  if (!response.headers.get('Content-Type')?.includes('json')) {
+    return undefined
+  }
   try {
     const body: unknown = await response.json()
     return typeof body === 'object' && body !== null ? (body as ProblemDetails) : undefined

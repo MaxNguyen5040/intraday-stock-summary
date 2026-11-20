@@ -33,7 +33,9 @@ const longDate = new Intl.DateTimeFormat('en-US', {
 const toUtcDate = (isoDay: string) => new Date(`${isoDay}T00:00:00Z`)
 
 export const formatPrice = (value: number) => price.format(value)
-export const formatShortPrice = (value: number) => shortPrice.format(value)
+// Sub-$10 instruments (FX pairs, penny stocks) need full precision to show any movement.
+export const formatShortPrice = (value: number) =>
+  (Math.abs(value) < 10 ? price : shortPrice).format(value)
 export const formatVolume = (value: number) => integer.format(value)
 export const formatCompactVolume = (value: number) => compact.format(value)
 export const formatPercent = (ratio: number) => percent.format(ratio)

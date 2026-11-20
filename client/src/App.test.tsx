@@ -95,6 +95,19 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: /no trades for tsla/i })).toBeInTheDocument()
   })
 
+  it('hides volume figures for instruments without volume', async () => {
+    server.use(
+      http.get(SUMMARY_URL, () => HttpResponse.json(sampleDays.map((d) => ({ ...d, volume: 0 })))),
+    )
+    const { user } = renderWithProviders(<App />)
+
+    await user.type(screen.getByLabelText(/ticker symbol/i), 'EURUSD=X')
+    await user.click(screen.getByRole('button', { name: /look up/i }))
+
+    expect(await screen.findByRole('img', { name: /chart/i })).not.toHaveAccessibleName(/volume/i)
+    expect(screen.queryByText(/avg daily volume/i)).not.toBeInTheDocument()
+  })
+
   it('follows browser back navigation between lookups', async () => {
     const { user } = renderWithProviders(<App />)
 

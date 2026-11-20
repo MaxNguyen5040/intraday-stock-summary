@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { sampleDays } from '../test/server'
-import { formatLongDate, formatPercent, formatPrice, formatShortDate } from './format'
+import {
+  formatLongDate,
+  formatPercent,
+  formatPrice,
+  formatShortDate,
+  formatShortPrice,
+} from './format'
 import { computePeriodStats } from './stats'
 import { normalizeSymbol } from './symbol'
 
@@ -31,6 +37,11 @@ describe('format', () => {
     expect(formatLongDate('2026-10-20')).toBe('Tue, Oct 20, 2026')
   })
 
+  it('shows four decimals for sub-10 prices in short form', () => {
+    expect(formatShortPrice(373.0985)).toBe('373.10')
+    expect(formatShortPrice(1.0975)).toBe('1.0975')
+  })
+
   it('signs percentages', () => {
     expect(formatPercent(0.0512)).toBe('+5.12%')
     expect(formatPercent(-0.003)).toBe('-0.30%')
@@ -48,10 +59,17 @@ describe('computePeriodStats', () => {
       periodLow: 100.1234,
       periodHigh: 106.5,
       lastMidpoint: 105,
+      hasVolume: true,
       averageVolume: 6_500_000 / 3,
       busiestDay: sampleDays[1],
     })
     expect(stats?.midpointChange).toBeCloseTo((105 - 101.3117) / 101.3117, 10)
+  })
+
+  it('flags instruments with no reported volume', () => {
+    const fx = sampleDays.map((d) => ({ ...d, volume: 0 }))
+
+    expect(computePeriodStats(fx)?.hasVolume).toBe(false)
   })
 
   it('returns null for an empty period', () => {

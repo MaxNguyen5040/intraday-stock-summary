@@ -25,19 +25,24 @@ interface ChartPoint extends DailySummary {
 
 export function PriceChart({ days }: { days: readonly DailySummary[] }) {
   const data: ChartPoint[] = days.map((d) => ({ ...d, range: [d.lowAverage, d.highAverage] }))
+  const hasVolume = days.some((d) => d.volume > 0)
 
   return (
     <figure className="chart">
       <figcaption className="chart-caption">
         <span className="legend-swatch legend-swatch-band" aria-hidden="true" />
         Daily low avg to high avg
-        <span className="legend-swatch legend-swatch-volume" aria-hidden="true" />
-        Volume
+        {hasVolume && (
+          <>
+            <span className="legend-swatch legend-swatch-volume" aria-hidden="true" />
+            Volume
+          </>
+        )}
       </figcaption>
       <div
         className="chart-canvas"
         role="img"
-        aria-label="Chart of daily average low and high prices with volume"
+        aria-label={`Chart of daily average low and high prices${hasVolume ? ' with volume' : ''}`}
       >
         <ResponsiveContainer width="100%" height="100%">
           <ComposedChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
@@ -61,24 +66,28 @@ export function PriceChart({ days }: { days: readonly DailySummary[] }) {
               width={64}
             />
             {/* Volume is scaled to the bottom quarter so bars don't compete with the price band. */}
-            <YAxis
-              yAxisId="volume"
-              orientation="right"
-              domain={[0, (max: number) => max * 4]}
-              tickFormatter={formatCompactVolume}
-              tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
-              tickLine={false}
-              axisLine={false}
-              width={48}
-            />
+            {hasVolume && (
+              <YAxis
+                yAxisId="volume"
+                orientation="right"
+                domain={[0, (max: number) => max * 4]}
+                tickFormatter={formatCompactVolume}
+                tick={{ fill: 'var(--text-muted)', fontSize: 12 }}
+                tickLine={false}
+                axisLine={false}
+                width={48}
+              />
+            )}
             <Tooltip content={ChartTooltip} cursor={{ fill: 'var(--chart-cursor)' }} />
-            <Bar
-              yAxisId="volume"
-              dataKey="volume"
-              fill="var(--chart-volume)"
-              radius={[2, 2, 0, 0]}
-              isAnimationActive={false}
-            />
+            {hasVolume && (
+              <Bar
+                yAxisId="volume"
+                dataKey="volume"
+                fill="var(--chart-volume)"
+                radius={[2, 2, 0, 0]}
+                isAnimationActive={false}
+              />
+            )}
             <Area
               yAxisId="price"
               dataKey="range"

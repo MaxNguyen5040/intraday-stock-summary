@@ -59,6 +59,17 @@ describe('fetchDailySummary', () => {
     expect(error.isTransient).toBe(true)
   })
 
+  it.each([502, 503, 504])(
+    'treats a bare %i from a proxy as the API being unreachable',
+    async (status) => {
+      server.use(http.get(SUMMARY_URL, () => new HttpResponse(null, { status })))
+
+      const error = await captureError(fetchDailySummary('TSLA'))
+
+      expect(error.kind).toBe('network')
+    },
+  )
+
   it('rejects a response that does not match the contract', async () => {
     server.use(http.get(SUMMARY_URL, () => HttpResponse.json([{ day: '2026-11-19', low: 1 }])))
 

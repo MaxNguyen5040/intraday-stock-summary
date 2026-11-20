@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace StockSummary.Api.Domain;
 
 /// <summary>
-/// A normalized ticker symbol. Covers equities (TSLA), share classes (BRK-B, BF.B),
+/// A normalized ticker symbol. Covers equities (TSLA), share classes (BRK-B), exchange suffixes (7203.T),
 /// indices (^GSPC) and currency pairs (EURUSD=X).
 /// </summary>
 public sealed partial record StockSymbol
